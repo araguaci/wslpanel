@@ -2,7 +2,7 @@
 
 [Português](README.md) · [Español](README-ES.md)
 
-A panel for the WSL distro: CPU, memory, disk, `/tmp` and `/var/log`, refreshed once a second, plus the packages installed by dpkg. Version **0.1.0** (2026-11-18) is shown in the footer.
+A panel for the WSL distro: CPU, memory, disk, `/tmp` and `/var/log`, refreshed once a second, plus the packages installed by dpkg. Version **0.2.0** (2026-11-18) is shown in the footer.
 
 Repository: <https://github.com/araguaci/wslpanel>
 

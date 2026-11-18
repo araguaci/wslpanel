@@ -2,7 +2,7 @@
 
 [Português](README.md) · [English](README-EN.md)
 
-Panel de la distro WSL: consumo de CPU, memoria, disco, `/tmp` y `/var/log`, una vez por segundo, y los programas instalados por dpkg. La versión **0.1.0** (2026-11-18) aparece en el pie.
+Panel de la distro WSL: consumo de CPU, memoria, disco, `/tmp` y `/var/log`, una vez por segundo, y los programas instalados por dpkg. La versión **0.2.0** (2026-11-18) aparece en el pie.
 
 Repositorio: <https://github.com/araguaci/wslpanel>
 

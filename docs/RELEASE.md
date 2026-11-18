@@ -1,6 +1,6 @@
 # Versão, changelog e release
 
-O número publicado é o de `build.zig.zon`. O rodapé mostra esse número e a data de `src/meta.zig`. O histórico fica no [CHANGELOG.md](../CHANGELOG.md). A `main` no GitHub é a 0.1.0. O repositório não tem workflow de release: a tag e o binário sobem depois que o pull request entra na `main`.
+O número publicado é o de `build.zig.zon`. O rodapé mostra esse número e a data de `src/meta.zig`. O histórico fica no [CHANGELOG.md](../CHANGELOG.md). O repositório não tem workflow de release: a tag e o binário sobem depois que o pull request entra na `main`.
 
 A 0.1.0 está em <https://github.com/araguaci/wslpanel/releases/tag/v0.1.0>, com o arquivo `wslpanel-0.1.0-linux-x86_64`.
 
