@@ -73,7 +73,7 @@ zig build
 
 `--nanoui-wait=2` lets the meter take a one-second `/proc/stat` delta before the snapshot. No window is shown.
 
-The published version is the one in `build.zig.zon`. The footer date lives in `src/meta.zig`. History is in [CHANGELOG.md](CHANGELOG.md).
+The published version is the one in `build.zig.zon`. The footer date lives in `src/meta.zig`. History is in [CHANGELOG.md](CHANGELOG.md). The version, changelog and release steps are in [docs/RELEASE.md](docs/RELEASE.md).
 
 ## License
 

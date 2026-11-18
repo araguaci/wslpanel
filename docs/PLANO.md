@@ -1,6 +1,6 @@
 # Plano do wslpanel
 
-A ordem segue o que os exemplos e os apps do nanoui já desenham. O que está marcado entrou na árvore de trabalho depois da 0.1.0.
+A ordem segue o que os exemplos e os apps do nanoui já desenham. O que está marcado entrou na árvore de trabalho depois da 0.1.0. Publicar uma versão segue [RELEASE.md](RELEASE.md).
 
 ## Feito na 0.1.0
 

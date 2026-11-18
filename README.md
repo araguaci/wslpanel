@@ -73,7 +73,7 @@ zig build
 
 `--nanoui-wait=2` deixa o medidor ler um segundo delta de `/proc/stat` antes do snapshot. A janela não é mostrada.
 
-A versão publicada é a de `build.zig.zon`. A data do rodapé está em `src/meta.zig`. O histórico fica no [CHANGELOG.md](CHANGELOG.md).
+A versão publicada é a de `build.zig.zon`. A data do rodapé está em `src/meta.zig`. O histórico fica no [CHANGELOG.md](CHANGELOG.md). O passo a passo de versão, changelog e release está em [docs/RELEASE.md](docs/RELEASE.md).
 
 ## Licença
 
