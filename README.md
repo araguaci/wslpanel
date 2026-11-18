@@ -6,6 +6,8 @@ Painel da distro WSL: consumo de CPU, memória, disco, `/tmp` e `/var/log`, no r
 
 Repositório: <https://github.com/araguaci/wslpanel>
 
+![Painel do WSL com Recursos, Processos, Docker, Logs e Programas](docs/wslpanel-dev.jpg)
+
 ## Recursos
 
 - **Recursos** (página inicial): percentual de CPU, carga, uma barra por núcleo, RAM, swap, disco de `/`, tamanho de `/tmp` e de `/var/log`, com o histórico recente.

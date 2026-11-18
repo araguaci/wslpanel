@@ -6,6 +6,8 @@ A panel for the WSL distro: CPU, memory, disk, `/tmp` and `/var/log`, refreshed 
 
 Repository: <https://github.com/araguaci/wslpanel>
 
+![WSL Panel with Resources, Processes, Docker, Logs and Programs](docs/wslpanel-dev.jpg)
+
 ## Features
 
 - **Resources** (home): CPU percent, load, one bar per core, RAM, swap, disk for `/`, and the size of `/tmp` and `/var/log`, with the recent history.
