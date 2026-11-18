@@ -1,0 +1,22 @@
+.{
+    .name = .wslpanel,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .nanoui = .{
+            .url = "git+https://github.com/justrach/nanoui#dd37daada8aee51bbd45ff4bd2d3681531a5d2ab",
+            .hash = "nanoui-0.14.6-we0KMdvNQwDZiLw-0LqwYt0rS3E4SObksSMxYAwrnAdK",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "README.md",
+        "README-EN.md",
+        "README-ES.md",
+        "CHANGELOG.md",
+        "LICENSE",
+    },
+    .fingerprint = 0x58e6665bbeb25c4,
+}

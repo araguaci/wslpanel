@@ -1,0 +1,74 @@
+# wslpanel
+
+[English](README-EN.md) · [Español](README-ES.md)
+
+Painel da distro WSL: consumo de CPU, memória, disco, `/tmp` e `/var/log`, no ritmo de um segundo, e os programas instalados pelo dpkg. A versão **0.1.0** (2026-11-18) aparece no rodapé.
+
+Repositório: <https://github.com/araguaci/wslpanel>
+
+## Recursos
+
+- **Recursos** (página inicial): percentual de CPU, carga, uma barra por núcleo, RAM, swap, disco de `/`, tamanho de `/tmp` e de `/var/log`, com o histórico recente.
+- **Limpar /tmp**: pede confirmação e apaga arquivos e pastas comuns. Ficam os sockets da sessão gráfica: `.X11-unix`, `.ICE-unix`, `.XIM-unix` e `.font-unix`.
+- **Limpar logs**: pede confirmação e só remove arquivos já rodados (`.gz`, `.xz`, `.bz2`, `.old` ou nome terminado em `.<número>`, como `syslog.1`). O log ativo permanece. Sem permissão, o painel avisa e não pede senha.
+- **Programas**: pacotes desta distro Debian/Ubuntu. Busca, filtros (programas, manuais, todos, atualizações, órfãos, bibliotecas), ordenação por nome, tamanho ou data. O detalhe mostra versão, origem, tamanho, dependências e quem exige o pacote.
+- Atualizar, remover e limpar órfãos pedem confirmação e rodam `sudo -n apt-get`. A senha não fica guardada: se o sudo pedir senha, o comando aparece no rodapé para o terminal. Pacote essencial ou de prioridade obrigatória não é removido.
+- **Idiomas**: português (pt_BR), inglês e espanhol. O idioma segue `WSLPANEL_LANG`, depois `LC_ALL`, `LC_MESSAGES` e `LANG`. Sem isso, a interface abre em português. Os botões PT, EN e ES no rodapé valem para a sessão.
+- O rodapé mostra `wslpanel`, a versão de `build.zig.zon` e a data da release.
+
+## Requisitos
+
+- Linux, inclusive uma distro Debian ou Ubuntu no WSL2. A aba Programas lê `/var/lib/dpkg/status`.
+- [Zig 0.17.0](https://ziglang.org/download/0.17.0/).
+- GTK 3 (`libgtk-3-0`) para a janela. No WSL2, o WSLg deixa `DISPLAY` definido.
+- `sudo` para as ações de pacote. A limpeza de `/tmp` e `/var/log` usa as permissões do usuário.
+
+## Instalar e executar
+
+```sh
+git clone https://github.com/araguaci/wslpanel
+cd wslpanel
+zig build -Doptimize=ReleaseSafe
+./zig-out/bin/wslpanel
+```
+
+A primeira compilação baixa o [nanoui](https://github.com/justrach/nanoui) (MIT, Rach Pradhan), na revisão fixada em `build.zig.zon`.
+
+No Debian ou Ubuntu:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y libgtk-3-0
+```
+
+Zig 0.17.0, se ainda não estiver no `PATH`:
+
+```sh
+# https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz
+tar -xJf zig-x86_64-linux-0.17.0.tar.xz -C "$HOME/.local"
+export PATH="$HOME/.local/zig-x86_64-linux-0.17.0:$PATH"
+```
+
+Outro idioma nesta execução:
+
+```sh
+WSLPANEL_LANG=en ./zig-out/bin/wslpanel
+WSLPANEL_LANG=es ./zig-out/bin/wslpanel
+WSLPANEL_LANG=pt_BR ./zig-out/bin/wslpanel
+```
+
+## Desenvolvimento
+
+```sh
+zig build test
+zig build
+./zig-out/bin/wslpanel --nanoui-snapshot=/tmp/wslpanel.png --nanoui-wait=2
+```
+
+`--nanoui-wait=2` deixa o medidor ler um segundo delta de `/proc/stat` antes do snapshot. A janela não é mostrada.
+
+A versão publicada é a de `build.zig.zon`. A data do rodapé está em `src/meta.zig`. O histórico fica no [CHANGELOG.md](CHANGELOG.md).
+
+## Licença
+
+MIT. Veja [LICENSE](LICENSE). A interface é desenhada com o nanoui, que tem a própria licença MIT.
