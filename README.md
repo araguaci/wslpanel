@@ -11,10 +11,16 @@ Repositório: <https://github.com/araguaci/wslpanel>
 - **Recursos** (página inicial): percentual de CPU, carga, uma barra por núcleo, RAM, swap, disco de `/`, tamanho de `/tmp` e de `/var/log`, com o histórico recente.
 - **Limpar /tmp**: pede confirmação e apaga arquivos e pastas comuns. Ficam os sockets da sessão gráfica: `.X11-unix`, `.ICE-unix`, `.XIM-unix` e `.font-unix`.
 - **Limpar logs**: pede confirmação e só remove arquivos já rodados (`.gz`, `.xz`, `.bz2`, `.old` ou nome terminado em `.<número>`, como `syslog.1`). O log ativo permanece. Sem permissão, o painel avisa e não pede senha.
+- **Processos**: nome, PID, fatia de CPU, RSS e estado, lidos de `/proc`. Encerrar envia SIGTERM, com confirmação. O processo 1 e o próprio painel ficam de fora.
+- **Docker**: a aba só aparece se o cliente `docker` estiver instalado. Mostra cada container em execução, com CPU e memória lidas do cgroup, PIDs e o estado do `docker ps`.
+- **Logs**: o fim dos arquivos de texto em `/var/log` (também um nível abaixo, como `apt/history.log`). O número de linhas começa em 50 e sobe de 50 em 50, até 2000. Arquivos compactados e os binários `wtmp`, `btmp`, `lastlog` e `faillog` ficam de fora.
 - **Programas**: pacotes desta distro Debian/Ubuntu. Busca, filtros (programas, manuais, todos, atualizações, órfãos, bibliotecas), ordenação por nome, tamanho ou data. O detalhe mostra versão, origem, tamanho, dependências e quem exige o pacote.
-- Atualizar, remover e limpar órfãos pedem confirmação e rodam `sudo -n apt-get`. A senha não fica guardada: se o sudo pedir senha, o comando aparece no rodapé para o terminal. Pacote essencial ou de prioridade obrigatória não é removido.
+- Atualizar, remover e limpar órfãos pedem confirmação num diálogo e rodam `sudo -n apt-get`. A senha não fica guardada: se o sudo pedir senha, o comando aparece no rodapé, com **Copiar**. Pacote essencial ou de prioridade obrigatória não é removido.
+- **Tema**: Auto segue o sistema. Claro e Escuro ficam no rodapé, ao lado de PT, EN e ES.
 - **Idiomas**: português (pt_BR), inglês e espanhol. O idioma segue `WSLPANEL_LANG`, depois `LC_ALL`, `LC_MESSAGES` e `LANG`. Sem isso, a interface abre em português. Os botões PT, EN e ES no rodapé valem para a sessão.
 - O rodapé mostra `wslpanel`, a versão de `build.zig.zon` e a data da release.
+
+O que já entrou e o que vem depois está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Requisitos
 

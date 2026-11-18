@@ -8,6 +8,7 @@ pub const Id = enum {
     app_title,
     subtitle_resources,
     tab_resources,
+    tab_processes,
     tab_programs,
     search,
     reload,
@@ -67,6 +68,32 @@ pub const Id = enum {
     confirm_logs,
     open_failed,
     nothing_denied,
+    subtitle_processes,
+    footer_processes,
+    theme_auto,
+    theme_light,
+    theme_dark,
+    copy_cmd,
+    copied,
+    proc_search,
+    proc_name,
+    proc_state,
+    proc_kill,
+    proc_empty,
+    proc_ended,
+    proc_denied,
+    tab_docker,
+    tab_logs,
+    subtitle_docker,
+    subtitle_logs,
+    footer_docker,
+    footer_logs,
+    docker_empty,
+    docker_down,
+    log_empty,
+    log_binary,
+    log_denied,
+    log_file,
 };
 
 pub fn t(lang: Lang, id: Id) []const u8 {
@@ -130,6 +157,38 @@ pub fn pendingPurge(a: std.mem.Allocator, lang: Lang, name: []const u8) []const 
         .pt_BR => std.fmt.allocPrint(a, "Remover {s} e a configuração que ele deixou?", .{name}) catch "",
         .en => std.fmt.allocPrint(a, "Remove {s} and the configuration it left behind?", .{name}) catch "",
         .es => std.fmt.allocPrint(a, "¿Quitar {s} y la configuración que dejó?", .{name}) catch "",
+    };
+}
+
+pub fn procCount(a: std.mem.Allocator, lang: Lang, n: usize) []const u8 {
+    return switch (lang) {
+        .pt_BR => std.fmt.allocPrint(a, "{d} processos", .{n}) catch "",
+        .en => std.fmt.allocPrint(a, "{d} processes", .{n}) catch "",
+        .es => std.fmt.allocPrint(a, "{d} procesos", .{n}) catch "",
+    };
+}
+
+pub fn dockerCount(a: std.mem.Allocator, lang: Lang, n: usize) []const u8 {
+    return switch (lang) {
+        .pt_BR => std.fmt.allocPrint(a, "{d} containers", .{n}) catch "",
+        .en => std.fmt.allocPrint(a, "{d} containers", .{n}) catch "",
+        .es => std.fmt.allocPrint(a, "{d} contenedores", .{n}) catch "",
+    };
+}
+
+pub fn logCount(a: std.mem.Allocator, lang: Lang, n: usize) []const u8 {
+    return switch (lang) {
+        .pt_BR => std.fmt.allocPrint(a, "{d} linhas", .{n}) catch "",
+        .en => std.fmt.allocPrint(a, "{d} lines", .{n}) catch "",
+        .es => std.fmt.allocPrint(a, "{d} líneas", .{n}) catch "",
+    };
+}
+
+pub fn pendingKill(a: std.mem.Allocator, lang: Lang, name: []const u8, pid: u32) []const u8 {
+    return switch (lang) {
+        .pt_BR => std.fmt.allocPrint(a, "Encerrar {s} ({d})? Ele recebe SIGTERM.", .{ name, pid }) catch "",
+        .en => std.fmt.allocPrint(a, "End {s} ({d})? It is sent SIGTERM.", .{ name, pid }) catch "",
+        .es => std.fmt.allocPrint(a, "¿Terminar {s} ({d})? Recibe SIGTERM.", .{ name, pid }) catch "",
     };
 }
 
@@ -200,6 +259,7 @@ fn pt(id: Id) []const u8 {
         .app_title => "Painel do WSL",
         .subtitle_resources => "CPU, memória, disco, /tmp e logs, no ritmo de um segundo",
         .tab_resources => "Recursos",
+        .tab_processes => "Processos",
         .tab_programs => "Programas",
         .search => "Buscar pacotes",
         .reload => "Recarregar",
@@ -259,6 +319,32 @@ fn pt(id: Id) []const u8 {
         .confirm_logs => "Apagar o rodízio de /var/log?",
         .open_failed => "Não foi possível abrir a pasta.",
         .nothing_denied => "Nada apagado: sem permissão para estes arquivos.",
+        .subtitle_processes => "Processos desta distro, por CPU e memória",
+        .footer_processes => "Encerrar envia SIGTERM. O processo 1 e este painel ficam de fora.",
+        .theme_auto => "Auto",
+        .theme_light => "Claro",
+        .theme_dark => "Escuro",
+        .copy_cmd => "Copiar",
+        .copied => "Comando copiado.",
+        .proc_search => "Buscar processos",
+        .proc_name => "Nome",
+        .proc_state => "Estado",
+        .proc_kill => "Encerrar",
+        .proc_empty => "Nenhum processo neste filtro",
+        .proc_ended => "Sinal enviado.",
+        .proc_denied => "Não foi possível encerrar.",
+        .tab_docker => "Docker",
+        .tab_logs => "Logs",
+        .subtitle_docker => "CPU, memória e processos de cada container",
+        .subtitle_logs => "O final dos arquivos de texto em /var/log",
+        .footer_docker => "CPU e memória vêm do cgroup. A aba só aparece quando o docker está instalado.",
+        .footer_logs => "O painel mostra o fim do arquivo. Cada passo soma 50 linhas.",
+        .docker_empty => "Nenhum container em execução",
+        .docker_down => "O Docker não respondeu.",
+        .log_empty => "Nenhum log de texto legível em /var/log",
+        .log_binary => "Arquivo binário: o painel não mostra estes bytes.",
+        .log_denied => "Não foi possível ler este arquivo.",
+        .log_file => "Arquivo",
     };
 }
 
@@ -267,6 +353,7 @@ fn en(id: Id) []const u8 {
         .app_title => "WSL Panel",
         .subtitle_resources => "CPU, memory, disk, /tmp and logs, once a second",
         .tab_resources => "Resources",
+        .tab_processes => "Processes",
         .tab_programs => "Programs",
         .search => "Search packages",
         .reload => "Reload",
@@ -326,6 +413,32 @@ fn en(id: Id) []const u8 {
         .confirm_logs => "Delete rotated files in /var/log?",
         .open_failed => "Could not open the folder.",
         .nothing_denied => "Nothing deleted: no permission for these files.",
+        .subtitle_processes => "Processes in this distro, by CPU and memory",
+        .footer_processes => "End sends SIGTERM. Process 1 and this panel stay.",
+        .theme_auto => "Auto",
+        .theme_light => "Light",
+        .theme_dark => "Dark",
+        .copy_cmd => "Copy",
+        .copied => "Command copied.",
+        .proc_search => "Search processes",
+        .proc_name => "Name",
+        .proc_state => "State",
+        .proc_kill => "End",
+        .proc_empty => "No process in this filter",
+        .proc_ended => "Signal sent.",
+        .proc_denied => "Could not end it.",
+        .tab_docker => "Docker",
+        .tab_logs => "Logs",
+        .subtitle_docker => "CPU, memory and processes of each container",
+        .subtitle_logs => "The end of the text files in /var/log",
+        .footer_docker => "CPU and memory come from the cgroup. This tab appears only when docker is installed.",
+        .footer_logs => "The panel shows the end of the file. Each step adds 50 lines.",
+        .docker_empty => "No running container",
+        .docker_down => "Docker did not answer.",
+        .log_empty => "No readable text log in /var/log",
+        .log_binary => "Binary file: the panel does not show these bytes.",
+        .log_denied => "Could not read this file.",
+        .log_file => "File",
     };
 }
 
@@ -334,6 +447,7 @@ fn es(id: Id) []const u8 {
         .app_title => "Panel de WSL",
         .subtitle_resources => "CPU, memoria, disco, /tmp y logs, una vez por segundo",
         .tab_resources => "Recursos",
+        .tab_processes => "Procesos",
         .tab_programs => "Programas",
         .search => "Buscar paquetes",
         .reload => "Recargar",
@@ -393,5 +507,31 @@ fn es(id: Id) []const u8 {
         .confirm_logs => "¿Borrar la rotación de /var/log?",
         .open_failed => "No se pudo abrir la carpeta.",
         .nothing_denied => "Nada borrado: sin permiso para estos archivos.",
+        .subtitle_processes => "Procesos de esta distro, por CPU y memoria",
+        .footer_processes => "Terminar envía SIGTERM. El proceso 1 y este panel se quedan.",
+        .theme_auto => "Auto",
+        .theme_light => "Claro",
+        .theme_dark => "Oscuro",
+        .copy_cmd => "Copiar",
+        .copied => "Comando copiado.",
+        .proc_search => "Buscar procesos",
+        .proc_name => "Nombre",
+        .proc_state => "Estado",
+        .proc_kill => "Terminar",
+        .proc_empty => "Ningún proceso en este filtro",
+        .proc_ended => "Señal enviada.",
+        .proc_denied => "No se pudo terminar.",
+        .tab_docker => "Docker",
+        .tab_logs => "Logs",
+        .subtitle_docker => "CPU, memoria y procesos de cada contenedor",
+        .subtitle_logs => "El final de los archivos de texto en /var/log",
+        .footer_docker => "CPU y memoria vienen del cgroup. La pestaña solo aparece cuando docker está instalado.",
+        .footer_logs => "El panel muestra el final del archivo. Cada paso suma 50 líneas.",
+        .docker_empty => "Ningún contenedor en ejecución",
+        .docker_down => "Docker no respondió.",
+        .log_empty => "Ningún log de texto legible en /var/log",
+        .log_binary => "Archivo binario: el panel no muestra estos bytes.",
+        .log_denied => "No se pudo leer este archivo.",
+        .log_file => "Archivo",
     };
 }

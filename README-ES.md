@@ -11,10 +11,16 @@ Repositorio: <https://github.com/araguaci/wslpanel>
 - **Recursos** (página inicial): porcentaje de CPU, carga, una barra por núcleo, RAM, swap, disco de `/`, tamaño de `/tmp` y de `/var/log`, con el historial reciente.
 - **Limpiar /tmp**: pide confirmación y borra archivos y carpetas comunes. Se quedan los sockets de la sesión gráfica: `.X11-unix`, `.ICE-unix`, `.XIM-unix` y `.font-unix`.
 - **Limpiar logs**: pide confirmación y solo quita archivos ya rotados (`.gz`, `.xz`, `.bz2`, `.old` o nombre terminado en `.<número>`, como `syslog.1`). El log activo permanece. Sin permiso, el panel avisa y no pide contraseña.
+- **Procesos**: nombre, PID, parte de CPU, RSS y estado, leídos de `/proc`. Terminar envía SIGTERM, con confirmación. El proceso 1 y este panel se quedan.
+- **Docker**: la pestaña solo aparece si el cliente `docker` está instalado. Muestra cada contenedor en ejecución, con CPU y memoria leídas del cgroup, PIDs y el estado de `docker ps`.
+- **Logs**: el final de los archivos de texto en `/var/log` (también un nivel más abajo, como `apt/history.log`). El número de líneas empieza en 50 y sube de 50 en 50, hasta 2000. Los archivos comprimidos y los binarios `wtmp`, `btmp`, `lastlog` y `faillog` quedan fuera.
 - **Programas**: paquetes de esta distro Debian/Ubuntu. Búsqueda, filtros (programas, manuales, todos, actualizaciones, huérfanos, bibliotecas) y orden por nombre, tamaño o fecha. El detalle muestra versión, origen, tamaño, dependencias y quién exige el paquete.
-- Actualizar, quitar y limpiar huérfanos piden confirmación y ejecutan `sudo -n apt-get`. La contraseña no se guarda: si sudo la pide, el comando aparece en el pie para la terminal. Un paquete esencial o de prioridad obligatoria no se quita.
+- Actualizar, quitar y limpiar huérfanos piden confirmación en un diálogo y ejecutan `sudo -n apt-get`. La contraseña no se guarda: si sudo la pide, el comando aparece en el pie, con **Copiar**. Un paquete esencial o de prioridad obligatoria no se quita.
+- **Tema**: Auto sigue el sistema. Claro y Oscuro están en el pie, junto a PT, EN y ES.
 - **Idiomas**: portugués (pt_BR), inglés y español. El idioma sigue `WSLPANEL_LANG`, luego `LC_ALL`, `LC_MESSAGES` y `LANG`. Si no hay nada de eso, la interfaz abre en portugués. Los botones PT, EN y ES del pie valen para la sesión.
 - El pie muestra `wslpanel`, la versión de `build.zig.zon` y la fecha de la release.
+
+Lo que ya entró y lo que viene después está en [docs/PLANO.md](docs/PLANO.md).
 
 ## Requisitos
 
