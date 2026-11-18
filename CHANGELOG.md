@@ -1,5 +1,51 @@
 # Changelog
 
+## Não publicado
+
+### pt_BR
+
+### en
+
+### es
+
+## 0.2.0 — 2026-11-18
+
+### pt_BR
+
+- Aba Processos, lida de `/proc`, com SIGTERM confirmado.
+- Abas do kit, diálogo de confirmação e aviso ao terminar uma ação.
+- Botão Copiar no comando `sudo` que o rodapé mostra.
+- Tema Auto, Claro ou Escuro.
+- Plano em [docs/PLANO.md](docs/PLANO.md).
+- Aba Docker, só quando o cliente existe: CPU, memória, PIDs e estado dos containers.
+- Aba Logs: final de `/var/log`, de 50 em 50 linhas.
+- Screenshot da janela no README.
+- Passo a passo de versão, changelog e release.
+
+### en
+
+- Processes tab, read from `/proc`, with a confirmed SIGTERM.
+- Kit tabs, a confirmation dialog and a notice when an action finishes.
+- Copy button for the `sudo` command the footer shows.
+- Theme Auto, Light or Dark.
+- Plan in [docs/PLANO.md](docs/PLANO.md).
+- Docker tab, only when the client exists: container CPU, memory, PIDs and status.
+- Logs tab: the end of `/var/log`, in steps of 50 lines.
+- Window screenshot in the README.
+- Version, changelog and release steps.
+
+### es
+
+- Pestaña Procesos, leída de `/proc`, con SIGTERM confirmado.
+- Pestañas del kit, diálogo de confirmación y aviso al terminar una acción.
+- Botón Copiar en el comando `sudo` que muestra el pie.
+- Tema Auto, Claro u Oscuro.
+- Plan en [docs/PLANO.md](docs/PLANO.md).
+- Pestaña Docker, solo cuando el cliente existe: CPU, memoria, PIDs y estado de los contenedores.
+- Pestaña Logs: el final de `/var/log`, de 50 en 50 líneas.
+- Captura de la ventana en el README.
+- Pasos de versión, changelog y release.
+
 ## 0.1.0 — 2026-11-18
 
 Primeira release.

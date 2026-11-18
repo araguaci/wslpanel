@@ -5,11 +5,16 @@ const std = @import("std");
 const nanoui = @import("nanoui");
 const ui = nanoui.ui;
 const catalog = @import("catalog.zig");
+const docker = @import("docker.zig");
 const i18n = @import("i18n.zig");
+const logs = @import("logs.zig");
 const meta = @import("meta.zig");
+const processes = @import("processes.zig");
 const resources = @import("resources.zig");
+const kit = nanoui.kit;
 
-pub const Page = enum { resources, programs };
+pub const Page = enum { resources, processes, docker, logs, programs };
+pub const Appearance = enum { system, light, dark };
 pub const Pending = enum { none, remove, purge, upgrade, upgrade_all, autoremove, update_index };
 
 pub const State = struct {
@@ -34,10 +39,25 @@ pub const State = struct {
     fixture_candidates: []const u8 = "",
     page: Page = .resources,
     lang: i18n.Lang = .pt_BR,
+    appearance: Appearance = .system,
+    ask: bool = false,
+    command_buf: [360]u8 = undefined,
+    command_len: usize = 0,
     meter: resources.Meter = .{},
+    procs: processes.List = .{},
+    containers: docker.Board = .{},
+    logview: logs.View = .{},
+    docker_on: bool = false,
+    toaster: kit.Toaster = undefined,
 
     pub fn init(gpa: std.mem.Allocator, io: std.Io) State {
-        return .{ .gpa = gpa, .io = io, .catalog = .init(gpa) };
+        return .{
+            .gpa = gpa,
+            .io = io,
+            .catalog = .init(gpa),
+            .toaster = .{ .gpa = gpa },
+            .docker_on = docker.present(io),
+        };
     }
 
     pub fn deinit(s: *State) void {
@@ -45,19 +65,36 @@ pub const State = struct {
         s.matches.deinit(s.gpa);
         s.query.deinit();
         s.status_owned.deinit(s.gpa);
+        s.procs.deinit(s.gpa);
+        s.containers.deinit(s.gpa);
+        s.logview.deinit(s.gpa);
+        s.toaster.deinit();
     }
 
     pub fn view(s: *State, c: *ui.Context) void {
+        c.theme_chosen = switch (s.appearance) {
+            .light => ui.Theme.light,
+            .dark => ui.Theme.dark_theme,
+            .system => null,
+        };
         if (s.page == .programs and (!s.loaded or s.want_reload)) s.reload();
         if (s.page == .programs) s.refill();
         const root = ui.div(c).column().sizeFull().bg(c.theme.background);
-        defer root.end();
         s.pageBar(c);
-        if (s.page == .resources) s.meter.panel(c, s.io, s.gpa, s.lang) else {
-            s.toolbar(c);
-            s.body(c);
+        switch (s.page) {
+            .resources => s.meter.panel(c, s.io, s.gpa, s.lang, &s.toaster),
+            .processes => s.procs.panel(c, s.io, s.gpa, s.lang, &s.toaster),
+            .docker => s.containers.panel(c, s.io, s.gpa, s.lang),
+            .logs => s.logview.panel(c, s.io, s.gpa, s.lang),
+            .programs => {
+                s.toolbar(c);
+                s.body(c);
+            },
         }
         s.footer(c);
+        root.end();
+        s.aptDialog(c);
+        s.toaster.view(c);
     }
 
     fn reload(s: *State) void {
@@ -98,24 +135,47 @@ pub const State = struct {
         const bar = ui.div(c).row().wFull().px(20).pt(16).pb(8).gap(12).itemsCenter();
         const titles = ui.div(c).column().grow().gap(2);
         ui.text(c, i18n.t(s.lang, .app_title), .{ .size = 22, .weight = .bold });
-        const sub = if (s.page == .resources)
-            i18n.t(s.lang, .subtitle_resources)
-        else
-            i18n.distroSub(c.alloc(), s.lang, s.catalog.distro());
+        const sub = switch (s.page) {
+            .resources => i18n.t(s.lang, .subtitle_resources),
+            .processes => i18n.t(s.lang, .subtitle_processes),
+            .docker => i18n.t(s.lang, .subtitle_docker),
+            .logs => i18n.t(s.lang, .subtitle_logs),
+            .programs => i18n.distroSub(c.alloc(), s.lang, s.catalog.distro()),
+        };
         ui.text(c, sub, .{ .size = 13, .color = c.theme.muted });
         titles.end();
-        s.pageButton(c, i18n.t(s.lang, .tab_resources), .resources);
-        s.pageButton(c, i18n.t(s.lang, .tab_programs), .programs);
-        bar.end();
-    }
-
-    fn pageButton(s: *State, c: *ui.Context, label: []const u8, page: Page) void {
-        const on = s.page == page;
-        if (ui.button(c, label, .{ .variant = if (on) .primary else .ghost, .size = 13 }).clicked) {
-            s.page = page;
-            s.pending = .none;
-            s.meter.confirm = null;
+        var labels: [5][]const u8 = undefined;
+        var pages: [5]Page = undefined;
+        var n: usize = 0;
+        labels[n] = i18n.t(s.lang, .tab_resources);
+        pages[n] = .resources;
+        n += 1;
+        labels[n] = i18n.t(s.lang, .tab_processes);
+        pages[n] = .processes;
+        n += 1;
+        if (s.docker_on) {
+            labels[n] = i18n.t(s.lang, .tab_docker);
+            pages[n] = .docker;
+            n += 1;
         }
+        labels[n] = i18n.t(s.lang, .tab_logs);
+        pages[n] = .logs;
+        n += 1;
+        labels[n] = i18n.t(s.lang, .tab_programs);
+        pages[n] = .programs;
+        n += 1;
+        var which: usize = 0;
+        for (pages[0..n], 0..) |p, i| if (p == s.page) {
+            which = i;
+        };
+        if (kit.tabs(c, labels[0..n], &which, .{ .variant = .pill, .size = .sm })) {
+            s.page = pages[which];
+            s.pending = .none;
+            s.ask = false;
+            s.meter.confirm = null;
+            s.procs.ask = false;
+        }
+        bar.end();
     }
 
     fn toolbar(s: *State, c: *ui.Context) void {
@@ -125,8 +185,8 @@ pub const State = struct {
         _ = ui.textField(c, &s.query, .{ .placeholder = i18n.t(s.lang, .search), .width = .fill });
         search.end();
         if (ui.button(c, i18n.t(s.lang, .reload), .{ .variant = .ghost, .size = 13 }).clicked) s.want_reload = true;
-        if (ui.button(c, i18n.t(s.lang, .indexes), .{ .variant = .ghost, .size = 13 }).clicked) s.pending = .update_index;
-        if (ui.button(c, i18n.t(s.lang, .upgrade_all), .{ .variant = .secondary, .size = 13 }).clicked) s.pending = .upgrade_all;
+        if (ui.button(c, i18n.t(s.lang, .indexes), .{ .variant = .ghost, .size = 13 }).clicked) s.confirm(.update_index);
+        if (ui.button(c, i18n.t(s.lang, .upgrade_all), .{ .variant = .secondary, .size = 13 }).clicked) s.confirm(.upgrade_all);
         tools.end();
 
         const chips = ui.div(c).row().wFull().px(20).py(4).gap(6).itemsCenter();
@@ -250,40 +310,76 @@ pub const State = struct {
 
     fn actions(s: *State, c: *ui.Context, p: *const catalog.Package) void {
         const th = c.theme;
-        if (s.pending != .none) {
-            ui.text(c, s.pendingText(c, p.name), .{ .size = 13, .wrap = true });
-            const row = ui.div(c).row().gap(8);
-            defer row.end();
-            if (ui.button(c, i18n.t(s.lang, .confirm), .{ .variant = .danger, .size = 13 }).clicked) s.apply();
-            if (ui.button(c, i18n.t(s.lang, .cancel), .{ .variant = .ghost, .size = 13 }).clicked) s.pending = .none;
-            return;
-        }
         const row = ui.div(c).row().gap(8);
         defer row.end();
         if (p.upgrade.len > 0 and ui.button(c, i18n.t(s.lang, .upgrade), .{ .variant = .primary, .size = 13 }).clicked)
-            s.pending = .upgrade;
+            s.confirm(.upgrade);
         if (catalog.removable(p.*)) {
-            if (ui.button(c, i18n.t(s.lang, .remove), .{ .variant = .danger, .size = 13 }).clicked) s.pending = .remove;
+            if (ui.button(c, i18n.t(s.lang, .remove), .{ .variant = .danger, .size = 13 }).clicked) s.confirm(.remove);
         } else ui.text(c, if (p.essential) i18n.t(s.lang, .essential_blocked) else i18n.t(s.lang, .required_blocked), .{ .size = 12, .color = th.muted, .wrap = true });
         if (s.catalog.orphans > 0) {
-            if (ui.button(c, i18n.t(s.lang, .clean_orphans), .{ .variant = .ghost, .size = 13 }).clicked) s.pending = .autoremove;
+            if (ui.button(c, i18n.t(s.lang, .clean_orphans), .{ .variant = .ghost, .size = 13 }).clicked) s.confirm(.autoremove);
         }
     }
 
     fn footer(s: *State, c: *ui.Context) void {
         const bar = ui.div(c).row().wFull().px(20).py(8).gap(12).itemsCenter().bg(c.theme.surface);
         defer bar.end();
-        const msg = if (s.status.len > 0) s.status else if (s.page == .resources)
-            i18n.t(s.lang, .footer_resources)
-        else
-            i18n.t(s.lang, .footer_programs);
-        const left = ui.div(c).row().grow();
+        const msg = if (s.status.len > 0) s.status else switch (s.page) {
+            .resources => i18n.t(s.lang, .footer_resources),
+            .processes => i18n.t(s.lang, .footer_processes),
+            .docker => i18n.t(s.lang, .footer_docker),
+            .logs => i18n.t(s.lang, .footer_logs),
+            .programs => i18n.t(s.lang, .footer_programs),
+        };
+        const left = ui.div(c).row().grow().gap(8).itemsCenter();
         ui.text(c, msg, .{ .size = 12, .color = c.theme.muted, .wrap = true });
+        if (s.command_len > 0 and ui.button(c, i18n.t(s.lang, .copy_cmd), .{ .variant = .ghost, .size = 12 }).clicked) {
+            c.clipboard.write(c.clipboard.ctx, s.command_buf[0..s.command_len]);
+            s.toaster.push(.{ .status = .success, .title = i18n.t(s.lang, .copied), .message = s.command_buf[0..s.command_len] });
+        }
         left.end();
+        s.themeButton(c, i18n.t(s.lang, .theme_auto), .system);
+        s.themeButton(c, i18n.t(s.lang, .theme_light), .light);
+        s.themeButton(c, i18n.t(s.lang, .theme_dark), .dark);
         s.langButton(c, "PT", .pt_BR);
         s.langButton(c, "EN", .en);
         s.langButton(c, "ES", .es);
         ui.text(c, c.print("wslpanel {s} · {s}", .{ meta.version, meta.date }), .{ .size = 12, .color = c.theme.muted, .mono = true });
+    }
+
+    fn themeButton(s: *State, c: *ui.Context, label: []const u8, appearance: Appearance) void {
+        const on = s.appearance == appearance;
+        if (ui.button(c, label, .{ .variant = if (on) .secondary else .ghost, .size = 12 }).clicked) s.appearance = appearance;
+    }
+
+    fn confirm(s: *State, pending: Pending) void {
+        s.pending = pending;
+        s.ask = true;
+    }
+
+    fn aptDialog(s: *State, c: *ui.Context) void {
+        if (!s.ask) return;
+        var open = true;
+        const name = if (s.selectedPkg()) |p| p.name else "";
+        if (kit.dialog(c, "apt", &open, .{
+            .title = i18n.t(s.lang, .confirm),
+            .description = s.pendingText(c, name),
+            .ok = i18n.t(s.lang, .confirm),
+            .cancel = i18n.t(s.lang, .cancel),
+            .ok_variant = .danger,
+        })) |d| {
+            switch (d.end()) {
+                .ok => s.apply(),
+                .cancel => s.pending = .none,
+                .none => {
+                    if (!open) s.pending = .none;
+                },
+            }
+        } else {
+            s.pending = .none;
+        }
+        s.ask = open and s.pending != .none;
     }
 
     fn langButton(s: *State, c: *ui.Context, label: []const u8, lang: i18n.Lang) void {
@@ -375,7 +471,10 @@ pub const State = struct {
                 s.note(op, name, err);
             return;
         }
-        s.brief(if (r.stdout.len > 0) r.stdout else i18n.t(s.lang, .done));
+        s.command_len = 0;
+        const done = if (r.stdout.len > 0) r.stdout else i18n.t(s.lang, .done);
+        s.brief(done);
+        s.toaster.push(.{ .status = .success, .title = i18n.t(s.lang, .done), .message = done });
         s.want_reload = true;
     }
 
@@ -390,9 +489,12 @@ pub const State = struct {
             w = copyInto(tmp[0..], w, " ");
             w = copyInto(tmp[0..], w, pkg);
         }
+        s.command_len = @min(w, s.command_buf.len);
+        @memcpy(s.command_buf[0..s.command_len], tmp[0..s.command_len]);
         w = copyInto(tmp[0..], w, " — ");
         w = copyInto(tmp[0..], w, why);
         s.brief(tmp[0..w]);
+        s.toaster.push(.{ .status = .warning, .title = i18n.t(s.lang, .copy_cmd), .message = s.command_buf[0..s.command_len] });
     }
 
     fn brief(s: *State, msg: []const u8) void {

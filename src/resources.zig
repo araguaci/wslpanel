@@ -5,6 +5,7 @@
 const std = @import("std");
 const nanoui = @import("nanoui");
 const ui = nanoui.ui;
+const kit = nanoui.kit;
 const i18n = @import("i18n.zig");
 
 pub const hist = 48;
@@ -54,7 +55,7 @@ pub const Meter = struct {
         return m.note_buf[0..m.note_len];
     }
 
-    pub fn panel(m: *Meter, c: *ui.Context, io: std.Io, gpa: std.mem.Allocator, lang: i18n.Lang) void {
+    pub fn panel(m: *Meter, c: *ui.Context, io: std.Io, gpa: std.mem.Allocator, lang: i18n.Lang, toaster: *kit.Toaster) void {
         m.sample(io, gpa, c.time);
         // A clock's second, not a frame on every refresh.
         c.frameIn(1);
@@ -69,6 +70,7 @@ pub const Meter = struct {
         m.folderCard(c, io, gpa, lang, .tmp);
         m.folderCard(c, io, gpa, lang, .logs);
         bottom.end();
+        m.confirmDialog(c, io, gpa, lang, toaster);
         if (m.note_len > 0) ui.text(c, m.note(), .{ .size = 12, .color = c.theme.muted, .wrap = true });
     }
 
@@ -130,20 +132,34 @@ pub const Meter = struct {
         spark(c, m, if (kind == .tmp) .tmp else .log, c.theme.muted);
         const hint = if (kind == .tmp) i18n.t(lang, .tmp_hint) else i18n.t(lang, .log_hint);
         ui.text(c, hint, .{ .size = 12, .color = c.theme.muted, .wrap = true });
-        if (m.confirm == kind) {
-            ui.text(c, if (kind == .tmp) i18n.t(lang, .confirm_tmp) else i18n.t(lang, .confirm_logs), .{ .size = 13, .wrap = true });
-            const row = ui.div(c).row().gap(8);
-            if (ui.button(c, i18n.t(lang, .confirm), .{ .variant = .danger, .size = 13 }).clicked) m.apply(io, gpa, lang, kind);
-            if (ui.button(c, i18n.t(lang, .cancel), .{ .variant = .ghost, .size = 13 }).clicked) m.confirm = null;
-            row.end();
-        } else {
-            const label = if (kind == .tmp) i18n.t(lang, .clean_tmp) else i18n.t(lang, .clean_logs);
-            if (ui.button(c, label, .{ .variant = .secondary, .size = 13 }).clicked) m.confirm = kind;
-        }
+        const label = if (kind == .tmp) i18n.t(lang, .clean_tmp) else i18n.t(lang, .clean_logs);
+        if (ui.button(c, label, .{ .variant = .secondary, .size = 13 }).clicked) m.confirm = kind;
         card.end();
+        _ = io;
+        _ = gpa;
     }
 
-    fn apply(m: *Meter, io: std.Io, gpa: std.mem.Allocator, lang: i18n.Lang, kind: Kind) void {
+    fn confirmDialog(m: *Meter, c: *ui.Context, io: std.Io, gpa: std.mem.Allocator, lang: i18n.Lang, toaster: *kit.Toaster) void {
+        const kind = m.confirm orelse return;
+        var open = true;
+        if (kit.dialog(c, "clean", &open, .{
+            .title = if (kind == .tmp) i18n.t(lang, .clean_tmp) else i18n.t(lang, .clean_logs),
+            .description = if (kind == .tmp) i18n.t(lang, .confirm_tmp) else i18n.t(lang, .confirm_logs),
+            .ok = i18n.t(lang, .confirm),
+            .cancel = i18n.t(lang, .cancel),
+            .ok_variant = .danger,
+        })) |d| {
+            switch (d.end()) {
+                .ok => m.apply(io, gpa, lang, kind, toaster),
+                .cancel => m.confirm = null,
+                .none => {
+                    if (!open) m.confirm = null;
+                },
+            }
+        } else m.confirm = null;
+    }
+
+    fn apply(m: *Meter, io: std.Io, gpa: std.mem.Allocator, lang: i18n.Lang, kind: Kind, toaster: *kit.Toaster) void {
         const path = if (kind == .tmp) "/tmp" else "/var/log";
         const result = clean(gpa, io, path, kind) catch {
             m.setNote(i18n.t(lang, .open_failed));
@@ -158,6 +174,11 @@ pub const Meter = struct {
         else
             i18n.cleaned(&buf, lang, result.removed);
         m.setNote(msg);
+        toaster.push(.{
+            .status = if (result.removed == 0 and result.denied) .warning else .success,
+            .title = if (kind == .tmp) i18n.t(lang, .clean_tmp) else i18n.t(lang, .clean_logs),
+            .message = msg,
+        });
         m.confirm = null;
         m.last_slow = -1000;
     }
