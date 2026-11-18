@@ -30,6 +30,7 @@ O que já entrou e o que vem depois está em [docs/PLANO.md](docs/PLANO.md).
 - [Zig 0.17.0](https://ziglang.org/download/0.17.0/).
 - GTK 3 (`libgtk-3-0`) para a janela. No WSL2, o WSLg deixa `DISPLAY` definido.
 - `sudo` para as ações de pacote. A limpeza de `/tmp` e `/var/log` usa as permissões do usuário.
+- Uma tela. Sem GPU, o OpenGL não abre (`libEGL`, `ZINK`, `gdk_gl_context`) e a janela fecha. Nesse caso: `NANOUI_RENDERER=cpu ./zig-out/bin/wslpanel`.
 
 ## Instalar e executar
 
@@ -52,10 +53,14 @@ sudo apt-get install -y libgtk-3-0
 Zig 0.17.0, se ainda não estiver no `PATH`:
 
 ```sh
-# https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz
+mkdir -p "$HOME/.local"
+curl -fL -o zig-x86_64-linux-0.17.0.tar.xz \
+  https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz
 tar -xJf zig-x86_64-linux-0.17.0.tar.xz -C "$HOME/.local"
 export PATH="$HOME/.local/zig-x86_64-linux-0.17.0:$PATH"
 ```
+
+`$HOME/.local` precisa existir antes do `tar`. O `export` vale neste terminal.
 
 Outro idioma nesta execução:
 

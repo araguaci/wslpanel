@@ -4,9 +4,18 @@
 
 ### pt_BR
 
+- A instalação do Zig cria `$HOME/.local` antes de extrair o arquivo.
+- Sem GPU, `NANOUI_RENDERER=cpu` desenha o painel na CPU.
+
 ### en
 
+- The Zig install creates `$HOME/.local` before extracting the archive.
+- Without a GPU, `NANOUI_RENDERER=cpu` draws the panel on the CPU.
+
 ### es
+
+- La instalación de Zig crea `$HOME/.local` antes de extraer el archivo.
+- Sin GPU, `NANOUI_RENDERER=cpu` dibuja el panel en la CPU.
 
 ## 0.2.0 — 2026-11-18
 
